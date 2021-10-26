@@ -1,0 +1,51 @@
+upstream nuklear-client {
+  server nuklear-client:3000;
+}
+
+upstream nuklear-server {
+  server nuklear-server:3001;
+}
+
+server {
+  listen 80;
+  server_name nuklear.${TLD} www.nuklear.${TLD};
+  return 301 https://www.nuklear.${TLD}$request_uri;
+}
+
+server {
+  listen 443 ssl;
+  server_name nuklear.${TLD};
+  ssl_certificate /etc/nginx/certs/fullchain.pem;
+  ssl_certificate_key /etc/nginx/certs/privkey.pem;
+  return 301 https://www.nuklear.${TLD}$request_uri;
+}
+
+map $http_origin $allow_origin {
+  ~^https?://(.*\.)?nuklear.${TLD}(:\d+)?$ $http_origin;
+  default "";
+}
+
+server {
+  listen 443 ssl;
+  server_name www.nuklear.${TLD};
+  ssl_certificate /etc/nginx/certs/fullchain.pem;
+  ssl_certificate_key /etc/nginx/certs/privkey.pem;
+  location / {
+    proxy_set_header 'Host' $host;
+    proxy_set_header 'X-Real-IP' $remote_addr;
+    proxy_pass http://nuklear-client;
+  }
+}
+
+server {
+  listen 443 ssl;
+  server_name api.nuklear.${TLD};
+  ssl_certificate /etc/nginx/certs/fullchain.pem;
+  ssl_certificate_key /etc/nginx/certs/privkey.pem;
+  location / {
+    include /etc/nginx/includes/headers.conf;
+    proxy_set_header 'Host' $host;
+    proxy_set_header 'X-Real-IP' $remote_addr;
+    proxy_pass http://nuklear-server;
+  }
+}

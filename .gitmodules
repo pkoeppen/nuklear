@@ -1,0 +1,10 @@
+[submodule "nuklear-client"]
+	path = nuklear-client
+	url = https://github.com/pkoeppen/nuklear-client
+[submodule "nuklear-server"]
+	path = nuklear-server
+	url = https://github.com/pkoeppen/nuklear-server
+[submodule "nuklear-socket"]
+	path = nuklear-socket
+	url = https://github.com/pkoeppen/nuklear-socket
+

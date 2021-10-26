@@ -1,0 +1,84 @@
+services:
+  nginx:
+    container_name: nuklear-nginx
+    build: ./nginx
+    depends_on:
+      - nuklear-client
+      - nuklear-server
+    environment:
+      TLD: local
+    volumes:
+      - ./nginx/certs/:/etc/nginx/certs/
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - frontend
+      - backend
+    command: nginx-debug -g 'daemon off;'
+
+  nuklear-client:
+    container_name: nuklear-client
+    build: ./nuklear-client
+    env_file: ./nuklear-client/.env
+    depends_on:
+      - nuklear-server
+    networks:
+      - backend
+    volumes:
+      - ./nuklear-client/:/app/
+      - /app/node_modules
+    command: npm run dev
+    expose:
+      - 3000
+    ports:
+      - 3000:3000
+
+  nuklear-server:
+    container_name: nuklear-server
+    build: ./nuklear-server
+    env_file: ./nuklear-server/.env
+    depends_on:
+      - postgres
+    networks:
+      - backend
+    volumes:
+      - ./nuklear-server/src/:/app/src/
+    command: npm run dev
+    expose:
+      - 3001
+    ports:
+      - 3001:3001
+
+  postgres:
+    container_name: nuklear-postgres
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: nuklear
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: nuklear
+    volumes:
+      - postgres-data-local:/var/lib/postgresql/data
+    networks:
+      - backend
+    expose:
+      - 5432
+    ports:
+      - 5432:5432
+
+  redis:
+    container_name: nuklear-redis
+    image: redislabs/redisearch:latest
+    networks:
+      - backend
+    expose:
+      - 6379
+    ports:
+      - 6379:6379
+
+volumes:
+  postgres-data-local:
+
+networks:
+  frontend:
+  backend:
